@@ -1,0 +1,171 @@
+<div class="d-flex h-100">
+  <!-- LEFT PANEL -->
+  <div
+    id="left-panel"
+    class="d-flex flex-column p-3 border-end"
+    style="width: 300px"
+  >
+    <h5 class="fw-semibold mb-2">Photo</h5>
+
+    <div
+      id="patient-photo-list"
+      class="overflow-auto"
+      style="
+        max-height: 70vh;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      "
+    ></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <!-- ... isi kanan ... -->
+  <div id="right-panel" class="flex-fill overflow-auto p-3">
+    <div id="report-page" class="paper">
+      <!-- === HEADER / KOP SURAT === -->
+      <div class="header">
+        <img id="logo" alt="Logo" />
+        <div class="kop-container">
+          <div
+            class="instansi"
+            contenteditable="true"
+            data-placeholder="Nama Rumah Sakit"
+          ></div>
+          <div
+            class="kop-detail editable-kop"
+            contenteditable="true"
+            placeholder="Tuliskan detail instansi..."
+          ></div>
+        </div>
+      </div>
+
+      <!-- === DATA PASIEN === -->
+      <div class="patient-info">
+        <div class="col">
+          <div class="field">
+            <label>MRN</label><input type="text" id="patient-mrn" readonly />
+          </div>
+          <div class="field">
+            <label>Name</label><input type="text" id="patient-name" readonly />
+          </div>
+          <div class="field">
+            <label>Birth Date/Age</label
+            ><input type="text" id="patient-dob" readonly /> /
+            <input type="text" id="patient-age" readonly />
+          </div>
+          <div class="field">
+            <label>Sex</label><input type="text" id="patient-sex" readonly />
+          </div>
+          <div class="field">
+            <label>Diagnose</label
+            ><input type="text" id="patient-diagnose" readonly />
+          </div>
+          <div class="field">
+            <label>Address</label
+            ><input type="text" id="patient-address" readonly />
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="field">
+            <label>City</label><input type="text" id="patient-city" readonly />
+          </div>
+          <div class="field">
+            <label>Telephone</label
+            ><input type="text" id="patient-telephone" readonly />
+          </div>
+          <div class="field">
+            <label>Ref. Doctor</label
+            ><input type="text" id="patient-referring_doctor" readonly />
+          </div>
+          <div class="field">
+            <label>Class</label
+            ><input type="text" id="patient-class" readonly />
+          </div>
+          <div class="field">
+            <label>Bed</label><input type="text" id="patient-bed" readonly />
+          </div>
+          <div class="field">
+            <label>Complaint</label
+            ><input type="text" id="patient-complaint" readonly />
+          </div>
+        </div>
+      </div>
+      <div class="field-procedure">
+        <p>Procedure</p>
+        <p id="patient-procedure"></p>
+      </div>
+
+      <!-- === BODY: Laporan & Foto === -->
+      <div class="body">
+        <div class="left-report">
+          <div class="section">
+            <!-- <h4>Laporan</h4> -->
+            <div
+              id="laporan-editor"
+              class="editable"
+              contenteditable="true"
+            ></div>
+          </div>
+
+          <div class="footer-signature">
+            <div class="signature-block">
+              <span class="label">Date: </span>
+              <span class="name-line" id="report-date"></span>
+            </div>
+            <div class="signature-block">
+              <!-- <span class="label">Doctor: </span> -->
+              <span class="name-line" id="doctor-sign"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-report">
+          <div class="photo-area" id="photo-area"></div>
+        </div>
+      </div>
+    </div>
+    <button id="btn-save">Export PDF</button>
+  </div>
+
+  <!-- Script untuk load gambar panel kiri -->
+  <script>
+    window.receiveImagesForReport = function (files) {
+      const container = document.getElementById("patient-photo-list");
+      container.innerHTML = "";
+
+      const images = files.filter((f) => f.ext.toLowerCase() === ".jpg");
+
+      images.forEach((img) => {
+        const el = document.createElement("img");
+        el.src = img.path;
+        el.style.width = "100%";
+        el.style.height = "120px";
+        el.style.objectFit = "cover";
+        el.style.borderRadius = "6px";
+        container.appendChild(el);
+      });
+    };
+  </script>
+</div>
+
+<div
+  id="spinner-overlay"
+  style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  "
+>
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>

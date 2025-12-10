@@ -1,0 +1,62 @@
+<style>
+.section {
+  margin-bottom: 20px;
+}
+
+.section h3 {
+  margin: 10px 0;
+  font-size: 1.1em;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 4px;
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+}
+
+.folder-item {
+  position: relative;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.folder-item img,
+.folder-item video {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.filename {
+  margin-top: 6px;
+  font-size: 0.85em;
+  word-break: break-word;
+}
+
+/* Play icon video */
+.play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.4);
+  color: white;
+  padding: 10px;
+  border-radius: 50%;
+  font-size: 24px;
+  pointer-events: none;
+}
+
+#folder-view {
+ height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+</style>
+
+<div id="folder-view" class="folder-grid"></div>

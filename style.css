@@ -1,0 +1,644 @@
+/* ====== Background layout ====== */
+body {
+  background-color: #f6f7f8 !important; /* agak abu lembut */
+  font-family: "Segoe UI", sans-serif;
+  padding-top: 30px;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  border: transparent !important;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* isi penuh 1 window */
+  overflow: hidden;
+  padding-top: 1rem; /* pengganti mt-4 biar ada jarak dari atas */
+  box-sizing: border-box;
+}
+
+.nav.nav-tabs {
+  margin-bottom: -0.4rem; /* hilangkan jarak bawah default */
+  border: transparent;
+}
+
+body > .container {
+  margin-top: -1rem; /* kompensasi padding-top pada body */
+}
+
+.container.mt-4 {
+  background-color: #fff; /* lebih putih dari body */
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 20px 30px 30px 30px;
+  width: 95% !important;
+  max-width: 2000px;
+}
+
+/* ====== Tabs styling ====== */
+.nav-tabs {
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.nav-tabs > li > a {
+  color: #555;
+  font-weight: 500;
+  border: none;
+  border-bottom: 3px solid transparent;
+  transition: 0.3s;
+}
+
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:focus,
+.nav-tabs > li.active > a:hover {
+  border: none;
+  border-bottom: 3px solid #4ab3f4;
+  color: #4ab3f4;
+  background-color: transparent;
+}
+
+.nav-tabs > li > a:hover {
+  background-color: #f9f9f9;
+  border: none;
+}
+
+/* ====== Tab content card ====== */
+.tab-content {
+  margin-top: 10px;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+#patient-table {
+  table-layout: fixed;
+}
+
+#patient-table th,
+#patient-table td {
+  text-align: center; /* optional */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#patients-content,
+#procedure-content,
+#results-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  gap: 1rem;
+}
+
+#patients-content > div {
+  flex: 1;
+  min-width: 0;
+}
+
+#patient-table tbody tr:hover {
+  cursor: pointer; /* optional, supaya terlihat bisa diklik */
+}
+
+.tab-locked {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.required:after {
+  content:" *";
+  color: red;
+}
+
+/* Procedure.html */
+/* Kiri: sembunyikan scrollbar tapi tetap bisa scroll */
+.scroll-hidden {
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+}
+.scroll-hidden::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+/* Batasi tinggi area agar scroll aktif jika konten melebihi */
+.left-scroll,
+.right-scroll {
+  max-height: calc(
+    100vh - 180px
+  ); /* Sesuaikan dengan tinggi navbar atau padding */
+}
+
+/* Kanan: scrollbar terlihat + sedikit padding bawah */
+.right-scroll {
+  overflow-y: auto;
+  padding-bottom: 2rem;
+}
+
+/* reports.html */
+
+#search-reports {
+  width: 16em;
+}
+
+/* Sidebar kiri */
+.sidebar {
+  width: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.sidebar-btn {
+  margin-bottom: 0.5rem;
+  background-color: #f8f9fa;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.sidebar-btn:hover {
+  background-color: #e2e6ea;
+}
+
+/* Kontainer utama: galeri + preview */
+.report-main {
+  display: flex;
+  flex: 1;
+  padding: 1rem;
+  gap: 15px;
+  min-height: 0; /* penting agar scroll anak bekerja */
+}
+
+/* Galeri kiri */
+.report-gallery {
+  width: 30%;
+  border-right: 1px solid #ddd;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+.gallery-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#add-gallery {
+  margin-top: 10px;
+}
+
+/* Preview laporan kanan */
+.report-preview {
+  flex: 1;
+  padding-left: 10px;
+  overflow-y: auto; /* scroll sendiri */
+  max-height: 100%;
+  display: flex;
+  justify-content: center; /* biar #report-page A4 di tengah */
+}
+
+/* Reports content / page A4 */
+#reports-content {
+  width: 100%;
+  max-width: 100%;
+  padding-right: 8px;
+}
+
+#report-page {
+  background: white;
+  width: 210mm;
+  height: 297mm;
+  padding: 5mm;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  margin: 10px 0;
+  position: relative;
+}
+
+/* Header / body / footer */
+.header {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #000;
+  padding-bottom: 10px;
+}
+
+.header img {
+  width: 80px;
+  height: 80px;
+  margin-right: 20px;
+}
+
+.header .instansi {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.body {
+  margin-top: 0.6em;
+}
+
+#laporan-text {
+  width: 100%;
+  height: 500px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 14px;
+}
+
+.footer {
+  position: absolute;
+  bottom: 20mm;
+  width: calc(100% - 40mm); /* padding 20mm kiri + kanan */
+  text-align: right;
+}
+
+.gallery-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.gallery-thumb {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.gallery-thumb:hover {
+  transform: scale(1.05);
+}
+
+/* create-report.html */
+.paper {
+  background: white;
+  width: 80%; /* fleksibel, isi 80% layar */
+  aspect-ratio: 1 / 1.414; /* proporsi A4 */
+  padding: 4%;
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  color: black;
+  font-weight: 600;
+}
+
+#patient-photo-list img {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+#right-panel {
+  overflow-y: auto;
+  /* height: 100vh;       */
+  height: calc(100vh - 100px);
+  padding-right: 10px; /* biar ada space untuk scrollbar */
+}
+
+#report-page .body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.2em;
+  width: 100%;
+  flex: 1;
+}
+
+/* === Header (kop surat) === */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Logo kiri, teks tetap center */
+  gap: 16px;
+}
+
+.header img {
+  width: auto;
+  height: 80px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.kop-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Nama instansi (1 baris saja) */
+.instansi {
+  width: 100%;
+  min-height: 1.3em;
+  max-height: 1.3em;
+  line-height: 1.3em;
+  overflow: hidden;
+  border: none;
+  outline: none;
+  text-align: center;
+  font-size: 2em;
+  font-weight: bold;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.instansi:empty::before {
+  content: attr(data-placeholder);
+  color: #777;
+}
+
+/* Detail instansi (alamat, telp, dsb) */
+.editable-kop {
+  margin-top: 2px;
+  margin-bottom: 10px;
+  width: 70%;
+  border: none;
+  outline: none;
+  background: transparent;
+  text-align: center;
+  font-size: 1em;
+  line-height: 1.4em;
+  color: #000;
+  height: 4.2em; 
+  overflow: hidden; 
+  white-space: pre-wrap;
+}
+
+/* Placeholder */
+.editable-kop:empty:before {
+  content: attr(placeholder);
+  color: #999;
+  pointer-events: none;
+}
+
+/* === Bagian Data Pasien (full width, dua kolom, label kiri) === */
+.patient-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.8em 1.2em; /* jarak antar kolom & baris */
+  width: 100%;
+  font-size: 0.95em;
+  margin-bottom: 0.8em;
+}
+
+/* Tiap baris: label di kiri, input di kanan */
+.field {
+  display: flex;
+  flex-direction: row;
+  align-items: initial;
+  width: 100%;
+  gap: 0.8em; /* jarak antara label & input */
+}
+
+.field-procedure {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 0.8em;
+  margin-top: 0;
+}
+
+.field-procedure label {
+  flex: 0 0 20%; /* label ambil 20% */
+  font-weight: bold;
+}
+
+.field-procedure input {
+  flex: 1; /* input ambil sisa ruang */
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.8em;
+  box-sizing: border-box;
+  color: black;
+  font-weight: 600; /* lebih tebal */
+  font-size: 1.05em; /* sedikit lebih besar */
+}
+
+/* Label rata kiri dan ambil ruang cukup */
+.field label {
+  flex: 0 0 35%; /* proporsi label */
+  text-align: left;
+  font-weight: bold;
+  color: #000;
+  white-space: nowrap; /* biar teks label gak turun ke bawah */
+}
+
+/* Input isi penuh sisa ruang */
+.field input {
+  flex: 1;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 0.3em;
+  background: #f9f9f9;
+  color: #000;
+  box-sizing: border-box;
+}
+
+/* Readonly style */
+.field input[readonly] {
+  background: #f3f3f3;
+  color: #000;
+  cursor: not-allowed;
+  border-color: #ddd;
+}
+
+.field input,
+.field-procedure input {
+  border: none !important; /* hilangkan garis */
+  background: transparent !important; /* hilangkan background */
+  box-shadow: none !important; /* hilangkan shadow jika ada */
+  color: #000; /* warna teks tetap terlihat */
+  padding: 0; /* hapus padding supaya rapi */
+  outline: none; /* hilangkan fokus default */
+  width: 100%; /* tetap full lebar */
+  box-sizing: border-box;
+  font-size: 0.95em; /* samain ukuran teks */
+  line-height: 1.5em; /* agar teks rata vertikal */
+  cursor: default; /* cursor biasa, bukan teks editable */
+}
+
+/* Kalau readonly, pastikan cursor bukan pointer */
+.field input[readonly],
+.field-procedure input[readonly] {
+  cursor: default;
+}
+
+/* === Panel kiri: teks laporan === */
+.left-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+.section h4 {
+  margin: 0 0 0.3em 0;
+  font-size: 1.1em;
+  color: #000;
+  padding-bottom: 0.2em;
+}
+
+.section textarea {
+  /* flex: 1; */
+  width: 100%;
+  border: 1px solid #ccc;
+  font-size: 1em;
+  /* padding: 0.5em; */
+  resize: none;
+  box-sizing: border-box;
+  border-radius: 0.3em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  /* min-height: 6em; */
+}
+
+.editable {
+  width: 90%; /* ⬅ PENTING: biar tidak melebihi kolom */
+  border: 1px solid #ccc;
+  padding: 0.6em;
+  white-space: pre-wrap;
+  word-break: break-word; /* ⬅ PENTING untuk wrap */
+  overflow-wrap: break-word; /* ⬅ kasus kata panjang */
+  border-radius: 0.3em;
+  outline: none; /* seperti textarea */
+}
+
+#laporan-editor {
+  height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid transparent;
+  /* border: none; */
+  padding: 0.8em;
+  border-radius: 0.3em;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  outline: none;
+  font-size: 1em;
+  line-height: 1.4em;
+  overflow: hidden;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+#laporan-editor strong {
+  font-weight: bold;
+  font-size: 1.05em;
+}
+
+/* === Panel kanan: foto/gambar === */
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 100%;
+  min-height: 0;
+}
+
+.photo-area {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(
+    5,
+    calc((100% - 4 * 4px) / 5)
+  ); /* 5 row, 4px gap */
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  box-sizing: border-box;
+  border: none;
+  /* border: 1px dashed #aaa; */
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.photo-area img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.photo-area .placeholder {
+  background: #eaeaea;
+  border: 1px dashed #bbb;
+  border-radius: 6px;
+}
+
+.photo-area:hover {
+  background: #f0f0f0;
+}
+
+/* === Footer (opsional) === */
+.footer-signature {
+  display: flex;
+  flex-direction: column; /* dari column → row */
+  justify-content:flex-start; /* biar kiri & kanan rapi */
+  gap: 1.5em; /* jarak antar blok */
+  margin-top: 1em;
+  margin-top: 1em;
+}
+
+.left-report,
+.right-report {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0; /* penting untuk scroll internal */
+}
+
+.right-report {
+  overflow-y: auto;
+}
+
+#reports-pagination {
+  position: sticky;
+  bottom: 0;
+  background: #fff; /* biar tidak transparan saat scroll */
+  z-index: 5;       /* jaga-jaga tertutup elemen lain */
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+

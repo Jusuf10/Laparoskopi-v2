@@ -1,0 +1,266 @@
+<!-- Wrapper dua kolom -->
+<div
+  class="d-flex gap-3 flex-grow-1"
+  style="min-height: 85vh; overflow-y: auto"
+>
+  <!-- 🩺 Kiri: Form Container -->
+  <div class="p-3 rounded d-flex flex-column" style="flex: 1; overflow-y: auto">
+    <div class="card flex-grow-1">
+      <div class="card-header bg-primary text-white">Patient Form</div>
+      <div class="card-body" style="overflow-y: auto; max-height: 70vh">
+        <form id="patient-form" class="mb-4" autocomplete="off">
+          <div class="row g-3">
+            <!-- Kolom kiri (identitas & alamat) -->
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="mrn" class="form-label required">Medical Record</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="mrn"
+                  placeholder="e.g. MR1234"
+                  tabindex="1"
+                  autofocus
+                  required
+                />
+                <small id="mrn-status" class="text-muted"></small>
+              </div>
+
+              <div class="mb-3">
+                <label for="name" class="form-label required">Patient Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="name"
+                  placeholder="Enter name"
+                  tabindex="2"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="date_of_birth" class="form-label required"
+                  >Date of Birth / Age</label
+                >
+                <div class="input-group">
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="date_of_birth"
+                    tabindex="3"
+                    required
+                  />
+                  <span class="input-group-text">/</span>
+                  <input type="number" class="form-control" id="age" readonly />
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="address" class="form-label required">Address</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="address"
+                  placeholder="Jl. Example No.123"
+                  tabindex="4"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="city" class="form-label required">City</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="city"
+                  placeholder="Enter city"
+                  tabindex="5"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Kolom kanan (klinis & kontak) -->
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="sex" class="form-label required">Sex</label>
+                <select id="sex" class="form-select" tabindex="6" required>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="procedure" class="form-label required">Procedure</label>
+                <select id="procedure" class="form-select" tabindex="7" required>
+                  <option value="" disabled selected>Select Procedure...</option>
+                  <option>Gastroscopy</option>
+                  <option>Colonoscopy</option>
+                  <option>Laparoscopy</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="doctor_name" class="form-label required">Doctor Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="doctor_name"
+                  placeholder="Dr. Smith"
+                  tabindex="8"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="telephone" class="form-label">Telephone</label>
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="telephone"
+                  placeholder="08xx-xxxx-xxxx"
+                  inputmode="tel"
+                  tabindex="9"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="date_procedure" class="form-label required"
+                  >Date Procedure</label
+                >
+                <input
+                  type="date"
+                  class="form-control"
+                  id="date_procedure"
+                  tabindex="10"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Baris kedua: pengirim, kelas, kamar -->
+          <div class="row g-3 mt-1">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="referring_doctor" class="form-label"
+                  >Referring Doctor</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="referring_doctor"
+                  placeholder=""
+                  tabindex="11"
+                />
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="class" class="form-label">Class</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="class"
+                  placeholder="e.g. VIP / III"
+                  tabindex="12"
+                />
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="bed" class="form-label">Bed</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="bed"
+                  placeholder=""
+                  tabindex="13"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Keluhan -->
+          <div class="mb-3">
+            <label for="complaint" class="form-label"
+              >Patient's Complaint</label
+            >
+            <textarea
+              id="complaint"
+              class="form-control"
+              rows="3"
+              placeholder="Patient's complaint..."
+              tabindex="14"
+            ></textarea>
+          </div>
+
+          <!-- Diagnosa -->
+          <div class="mb-3">
+            <label for="diagnose" class="form-label">Diagnose</label>
+            <textarea
+              id="diagnose"
+              class="form-control"
+              rows="4"
+              placeholder="Diagnose ..."
+              tabindex="15"
+            ></textarea>
+          </div>
+
+          <div class="text-end mt-2">
+            <button type="submit" class="btn btn-primary" tabindex="16">
+              Save
+            </button>
+            <button type="reset" class="btn btn-secondary ms-2" tabindex="17" hidden>
+              New Patient
+            </button>
+            <button
+              type="button"
+              class="btn btn-warning ms-2"
+              id="edit-btn"
+              tabindex="18"
+              hidden
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger ms-2"
+              id="delete-btn"
+              tabindex="19"
+              disabled
+            >
+              Delete
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📋 Kanan: Table Container -->
+  <div class="p-3 rounded d-flex flex-column" style="flex: 1; overflow-y: auto">
+    <div class="card flex-grow-1">
+      <div class="card-header bg-success text-white">Patient List</div>
+      <div class="card-body" style="overflow-y: auto; max-height: 70vh">
+        <table class="table table-hover mb-0 w-100" id="patient-table">
+          <thead class="table-dark">
+            <tr>
+              <th>MR</th>
+              <th>Name</th>
+              <th>Age</th>
+              <th>Sex</th>
+              <th>Procedure</th>
+              <th>Doctor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Data dari DB muncul di sini -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

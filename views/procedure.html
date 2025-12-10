@@ -1,0 +1,78 @@
+<div class="container-fluid py-3">
+  <div class="row g-3">
+    <!-- Kolom kiri -->
+    <div class="col-md-8 col-lg-9">
+      <div class="left-scroll scroll-hidden">
+        <!-- Header pasien -->
+        <div class="patient-header mb-3 d-flex justify-content-between align-items-center">
+          <div>
+            🩺 <strong>Pasien:</strong>
+            <span id="active-patient-name">-</span>
+            (<span id="active-patient-mrn">No RM: -</span>) -
+            <span id="active-procedure">-</span>
+          </div>
+          <button id="btn-start-procedure" class="btn btn-success btn-sm">
+            ▶️ Mulai Tindakan
+          </button>
+        </div>
+
+        <!-- Video preview area -->
+
+        <div id="video-section" class="mt-3" style="display: none">
+          <div
+            class="video-area mb-3 d-flex justify-content-between align-items-center"
+          >
+            <div class="fw-bold">🎥 VIDEO CAMERA</div>
+            <div style="width: 200px">
+              <select id="camera-select" class="form-select form-select-sm">
+                <option value="">Pilih Kamera...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="video-container text-center">
+            <video
+              id="camera-preview"
+              autoplay
+              playsinline
+              class="w-100 rounded shadow-sm"
+              style="height: auto; max-height: 420px; border: none; width: auto"
+            ></video>
+          </div>
+
+          <!-- Control buttons -->
+          <div class="control-bar mb-3 mt-1">
+            <div class="d-flex gap-2">
+              <button class="btn btn-danger" id="btn-record">⏺️ Record</button>
+              <button class="btn btn-primary" id="btn-capture">📸 Capture</button>
+              <button class="btn btn-warning" id="btn-finish">✅ Finish Procedure</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kolom kanan -->
+    <div class="col-md-4 col-lg-3">
+      <div class="right-scroll">
+        <div class="sidebar-photos">
+          <h6 class="text-center mb-3">📷 Hasil Capture / Record</h6>
+          <div id="gallery-container" class="d-flex flex-column gap-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Preview -->
+    <div class="modal fade" id="mediaPreviewModal" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark text-white">
+          <div class="modal-header border-0">
+            <h5 class="modal-title">📸 Pratinjau</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center" id="modal-media-preview"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

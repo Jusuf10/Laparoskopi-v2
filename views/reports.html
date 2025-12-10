@@ -1,0 +1,43 @@
+<style>
+  #reports-tables {
+    height: calc(100vh - 150px);
+    overflow-y: auto;
+  }
+</style>
+<div class="d-flex justify-content-between align-items-center mb-3 px-2">
+  <!-- KIRI: Free Disk -->
+  <div id="disk-usage" class="fw-semibold">Free disk: ...</div>
+  <!-- <header class="d-flex justify-content-end p-3"> -->
+  <form class="d-flex" role="search">
+    <input
+      id="search-reports"
+      class="form-control me-2"
+      type="search"
+      placeholder="Search MRN / Name"
+      aria-label="Search"
+    />
+  </form>
+  <!-- </header> -->
+</div>
+
+<div id="reports-tables">
+  <table id="reports-table" class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">MRN-Name</th>
+        <th scope="col">Procedure</th>
+        <th scope="col">Date</th>
+        <th scope="col">Time</th>
+        <th scope="col">Report</th>
+        <th scope="col">Data</th>
+        <th scope="col">Edit</th>
+        <th scope="col">Delete</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<nav id="reports-pagination" class="mb-2">
+  <ul class="pagination justify-content-end"></ul>
+</nav>
