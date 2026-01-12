@@ -13,7 +13,9 @@
             <!-- Kolom kiri (identitas & alamat) -->
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="mrn" class="form-label required">Medical Record</label>
+                <label for="mrn" class="form-label required"
+                  >Medical Record</label
+                >
                 <input
                   type="text"
                   class="form-control"
@@ -27,7 +29,9 @@
               </div>
 
               <div class="mb-3">
-                <label for="name" class="form-label required">Patient Name</label>
+                <label for="name" class="form-label required"
+                  >Patient Name</label
+                >
                 <input
                   type="text"
                   class="form-control"
@@ -90,26 +94,44 @@
                 </select>
               </div>
 
-              <div class="mb-3">
-                <label for="procedure" class="form-label required">Procedure</label>
-                <select id="procedure" class="form-select" tabindex="7" required>
-                  <option value="" disabled selected>Select Procedure...</option>
-                  <option>Gastroscopy</option>
-                  <option>Colonoscopy</option>
-                  <option>Laparoscopy</option>
-                </select>
+              <div class="mb-3 position-relative">
+                <label for="procedure" class="form-label required"
+                  >Procedure</label
+                >
+                <input
+                  type="text"
+                  id="procedure"
+                  class="form-control"
+                  tabindex="7"
+                  autocomplete="off"
+                  required
+                  placeholder="Type Procedure..."
+                />
+                <ul
+                  id="procedureSuggestions"
+                  class="list-group position-absolute w-100 d-none"
+                  style="z-index: 1000; max-height: 200px; overflow-y: auto"
+                ></ul>
               </div>
 
-              <div class="mb-3">
-                <label for="doctor_name" class="form-label required">Doctor Name</label>
+              <div class="mb-3 position-relative">
+                <label for="doctor_name" class="form-label required"
+                  >Doctor Name</label
+                >
                 <input
                   type="text"
                   class="form-control"
                   id="doctor_name"
                   placeholder="Dr. Smith"
                   tabindex="8"
+                  autocomplete="off"
                   required
                 />
+                <ul
+                  id="doctorSuggestions"
+                  class="list-group position-absolute w-100 d-none"
+                  style="z-index: 1000"
+                ></ul>
               </div>
 
               <div class="mb-3">
@@ -186,7 +208,7 @@
           <!-- Keluhan -->
           <div class="mb-3">
             <label for="complaint" class="form-label"
-              >Patient's Complaint</label
+              >Patient's Complaint (Max 29 characters)</label
             >
             <textarea
               id="complaint"
@@ -194,18 +216,22 @@
               rows="3"
               placeholder="Patient's complaint..."
               tabindex="14"
+              maxlength="29"
             ></textarea>
           </div>
 
           <!-- Diagnosa -->
           <div class="mb-3">
-            <label for="diagnose" class="form-label">Diagnose</label>
+            <label for="diagnose" class="form-label"
+              >Diagnose (Max 29 characters)</label
+            >
             <textarea
               id="diagnose"
               class="form-control"
               rows="4"
               placeholder="Diagnose ..."
               tabindex="15"
+              maxlength="29"
             ></textarea>
           </div>
 
@@ -213,7 +239,12 @@
             <button type="submit" class="btn btn-primary" tabindex="16">
               Save
             </button>
-            <button type="reset" class="btn btn-secondary ms-2" tabindex="17" hidden>
+            <button
+              type="reset"
+              class="btn btn-secondary ms-2"
+              tabindex="17"
+              hidden
+            >
               New Patient
             </button>
             <button

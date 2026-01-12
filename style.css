@@ -123,8 +123,12 @@ h2 {
 }
 
 .required:after {
-  content:" *";
+  content: " *";
   color: red;
+}
+
+#date_of_birth {
+  width: 100px;
 }
 
 /* Procedure.html */
@@ -236,7 +240,7 @@ h2 {
 }
 
 /* Header / body / footer */
-.header {
+/* .header {
   display: flex;
   align-items: center;
   border-bottom: 2px solid #000;
@@ -247,6 +251,27 @@ h2 {
   width: 80px;
   height: 80px;
   margin-right: 20px;
+} */
+.header {
+  display: flex;
+  align-items: center; /* Menjaga keseimbangan vertikal */
+  justify-content: flex-start;
+  gap: 20px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid #000;
+  margin-bottom: 15px;
+  /* Pastikan tidak ada overflow hidden di sini */
+  overflow: visible !important;
+}
+.header img {
+  /* Hapus height statis 80px, biarkan fleksibel atau beri batas yang lebih besar */
+  height: auto;
+  max-height: 110px; /* Sesuaikan dengan tinggi total 4 baris teks */
+  width: auto;
+  max-width: 150px;
+  object-fit: contain;
+  flex-shrink: 0;
+  align-self: center; /* Logo tetap di tengah secara vertikal */
 }
 
 .header .instansi {
@@ -294,10 +319,12 @@ h2 {
 }
 
 /* create-report.html */
-.paper {
+/* .paper {
   background: white;
-  width: 80%; /* fleksibel, isi 80% layar */
-  aspect-ratio: 1 / 1.414; /* proporsi A4 */
+
+  width: 210mm;
+  min-width: 210mm;
+  aspect-ratio: 1 / 1.414; 
   padding: 4%;
   box-shadow: 0 0 1em rgba(0, 0, 0, 0.2);
   display: flex;
@@ -306,6 +333,29 @@ h2 {
   position: relative;
   color: black;
   font-weight: 600;
+} */
+
+/* .paper {
+  background: white;
+  width: 210mm;
+  height: 297mm; 
+  padding: 4%;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  box-sizing: border-box; 
+} */
+.paper {
+  background: white;
+  width: 210mm;
+  height: 297mm;
+  padding: 4%;
+  display: flex;
+  flex-direction: column;
+  /* Hapus overflow: hidden agar elemen yang sedikit 'off' tidak terpotong */
+  overflow: visible;
+  box-sizing: border-box;
+  position: relative;
 }
 
 #patient-photo-list img {
@@ -328,33 +378,68 @@ h2 {
   gap: 0.2em;
   width: 100%;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* === Header (kop surat) === */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start; /* Logo kiri, teks tetap center */
-  gap: 16px;
+#logo {
+  z-index: 12;
 }
 
-.header img {
+/* .header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+} */
+.header {
+  display: flex;
+  /* Ubah ke flex-start agar logo tidak tertekan ke tengah jika teks terlalu tinggi */
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 20px;
+  margin-bottom: 20px;
+  /* Beri ruang yang cukup untuk area kop */
+  min-height: 120px;
+}
+
+/* .header img {
   width: auto;
   height: 80px;
   object-fit: contain;
   flex-shrink: 0;
+} */
+.header img {
+  /* Tingkatkan ukuran tinggi logo agar seimbang dengan teks 3.2em */
+  height: 110px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+  /* Pastikan gambar tidak terpotong oleh overflow kontainer manapun */
+  display: block;
 }
 
+/* .kop-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  overflow: visible;
+} */
 .kop-container {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  /* Pastikan kontainer teks tidak membatasi tinggi */
+  min-height: min-content;
 }
 
 /* Nama instansi (1 baris saja) */
-.instansi {
+/* .instansi {
   width: 100%;
   min-height: 1.3em;
   max-height: 1.3em;
@@ -367,8 +452,66 @@ h2 {
   font-weight: bold;
   background: transparent;
   white-space: nowrap;
+} */
+.instansi {
+  font-size: 2em !important;
+  font-weight: 800;
+  line-height: 1.1; /* Sedikit dilonggarkan agar huruf g, j, y tidak terpotong bawahnya */
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  width: 100%;
 }
 
+/* Container Detail */
+/* .kop-detail {
+  margin-top: 5px;
+  font-size: 1em;
+  font-weight: 400;
+  line-height: 1.3;
+  white-space: pre-wrap;
+} */
+.kop-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 5px;
+}
+
+/* Baris Departemen (Akan mencakup baris 'b' dan 'c') */
+.dept-row {
+  font-size: 1.3em !important; /* Ukuran Medium */
+  font-weight: 600 !important; /* Ketebalan Medium/Semi-bold */
+  line-height: 1.2;
+  color: #000;
+  text-align: center;
+  display: block;
+}
+
+/* Baris Alamat (Baris 'd') */
+.addr-row {
+  font-size: 0.95em !important; /* Ukuran Normal/Kecil */
+  font-weight: 400 !important; /* Normal */
+  line-height: 1.4;
+  color: #333;
+  margin-top: 4px;
+  text-align: center;
+  display: block;
+}
+
+/* Baris Pertama: Medium */
+/* .kop-detail::first-line {
+  font-weight: 600;
+  font-size: 1.2em; 
+} */
+
+/* Baris 2 & 3: Normal */
+.kop-detail {
+  font-weight: 400;
+  font-size: 0.95em;
+}
 .instansi:empty::before {
   content: attr(data-placeholder);
   color: #777;
@@ -378,7 +521,7 @@ h2 {
 .editable-kop {
   margin-top: 2px;
   margin-bottom: 10px;
-  width: 70%;
+  width: 100%;
   border: none;
   outline: none;
   background: transparent;
@@ -386,8 +529,8 @@ h2 {
   font-size: 1em;
   line-height: 1.4em;
   color: #000;
-  height: 4.2em; 
-  overflow: hidden; 
+  height: auto;
+  overflow: visible;
   white-space: pre-wrap;
 }
 
@@ -425,6 +568,7 @@ h2 {
   width: 100%;
   gap: 0.8em;
   margin-top: 0;
+  font-weight: 700;
 }
 
 .field-procedure label {
@@ -484,7 +628,11 @@ h2 {
   color: #000; /* warna teks tetap terlihat */
   padding: 0; /* hapus padding supaya rapi */
   outline: none; /* hilangkan fokus default */
-  width: 100%; /* tetap full lebar */
+  padding-left: 0 !important;
+  /* width: 210mm;  */
+  /* Fixed A4 width */
+  /* min-width: 210mm;  */
+  /* Prevent shrinking */
   box-sizing: border-box;
   font-size: 0.95em; /* samain ukuran teks */
   line-height: 1.5em; /* agar teks rata vertikal */
@@ -511,10 +659,13 @@ h2 {
 }
 
 .section h4 {
-  margin: 0 0 0.3em 0;
+  /* margin: 0 0 0.3em 0; */
+  margin: 0;
+  padding: 0;
+  margin-bottom: 0.3em;
   font-size: 1.1em;
   color: #000;
-  padding-bottom: 0.2em;
+  /* padding-bottom: 0.2em; */
 }
 
 .section textarea {
@@ -542,12 +693,11 @@ h2 {
   outline: none; /* seperti textarea */
 }
 
-#laporan-editor {
+/* #laporan-editor {
   height: 100vh;
   width: 100%;
   max-width: 100%;
   border: 1px solid transparent;
-  /* border: none; */
   padding: 0.8em;
   border-radius: 0.3em;
   white-space: pre-wrap;
@@ -559,11 +709,34 @@ h2 {
   overflow: hidden;
   max-height: 85vh;
   overflow-y: auto;
+} */
+#laporan-editor {
+  flex: 1;
+  width: 100%;
+  overflow-y: hidden;
+  box-sizing: border-box;
+  padding: 0.5em 0;
+  font-size: 1em;
+  line-height: 1.4em;
+  border: none;
+  outline: none;
+  display: block;
+
+  /* KUNCI UTAMA DI SINI */
+  overflow-y: hidden; /* Sembunyikan scroll agar PDF bersih */
+  /* max-height: 450px; */
+  box-sizing: border-box;
 }
 
 #laporan-editor strong {
   font-weight: bold;
   font-size: 1.05em;
+}
+
+#laporan-editor ul,
+#laporan-editor ol {
+  padding-left: 1.2em; /* Atur sesedikit mungkin agar tidak terlalu menjorok */
+  margin-left: 0;
 }
 
 /* === Panel kanan: foto/gambar === */
@@ -612,21 +785,52 @@ h2 {
 }
 
 /* === Footer (opsional) === */
-.footer-signature {
+/* .footer-signature {
   display: flex;
-  flex-direction: column; /* dari column → row */
-  justify-content:flex-start; /* biar kiri & kanan rapi */
-  gap: 1.5em; /* jarak antar blok */
+  flex-direction: column; 
+  justify-content: flex-start; 
+  gap: 1.5em;
   margin-top: 1em;
   margin-top: 1em;
+} */
+.footer-signature {
+  margin-top: 10auto; /* Ini akan mendorong footer ke dasar .left-report */
+  flex-shrink: 0;
+  /* padding-top: 1em; */
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
 }
 
-.left-report,
+.left-report {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
 .right-report {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0; /* penting untuk scroll internal */
+}
+/* .left-report .section {
+  flex: 1; 
+  display: flex;
+  flex-direction: column;
+  min-height: 0; 
+  overflow: hidden;
+  height: 100%;
+} */
+.left-report .section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  /* Hapus height: 100% di sini agar flex-grow yang bekerja */
 }
 
 .right-report {
@@ -637,8 +841,7 @@ h2 {
   position: sticky;
   bottom: 0;
   background: #fff; /* biar tidak transparan saat scroll */
-  z-index: 5;       /* jaga-jaga tertutup elemen lain */
+  z-index: 5; /* jaga-jaga tertutup elemen lain */
   padding-top: 10px;
   padding-bottom: 10px;
 }
-
