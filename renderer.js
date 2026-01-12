@@ -17,7 +17,6 @@ let everyReports = [];
 let currentPage = 1;
 const pageSize = 10;
 
-
 // 🔍 Fungsi global untuk mengetahui tab yang sedang aktif
 window.getActiveTab = function () {
   const active = document.querySelector(".nav-link.active, .tab-button.active");
@@ -42,8 +41,8 @@ async function startProcedureSession(mrn, procedureName, procedureId) {
   const result = await window.electronAPI.ensurePatientFolder({
     mrn,
     procedure: procedureName,
-    procedureDate,
-    procedureTime,
+    // procedureDate,
+    // procedureTime,
     procedureId
   });
 
@@ -296,7 +295,11 @@ function renderReportsRows(rows) {
       <td>${r.time}</td>
       <td class="text-start">
         ${r.hasPdf
-        ? `<span style="color:green;font-size:1.4em;">✓</span>`
+        ? `<span class="pdf-view" 
+           data-folder="${r.folderPath}" 
+           data-id="${r.id}"
+           style="color:green; font-size:1.4em; cursor:pointer;" 
+           title="Buka PDF">✓</span>`
         : `<span class="pdf-create"
                     data-folder="${r.folderPath}"
                     data-id="${r.id}"
@@ -352,86 +355,74 @@ function renderPagination(totalRows) {
   `;
 }
 
-async function renderReportsTable() {
-  await checkStorage();
+document.addEventListener("click", async (e) => {
 
-  console.log("📄 Mulai render tabel reports...");
+  const recreateBtn = e.target.closest(".pdf-view");
+  if (recreateBtn) {
+    const { isConfirmed } = await Swal.fire({
+      title: 'Re-Create Report?',
+      text: "The PDF report already exists. Do you want to edit and overwrite the old file?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, Edit Again',
+      cancelButtonText: 'Cancel'
+    });
 
-  // Ambil elemen tbody setelah reports.html selesai load
-  const tableBody = document.querySelector("#reports-table tbody");
-  if (!tableBody) {
-    console.error("❌ #reports-table tbody tidak ditemukan");
+    if (isConfirmed) {
+      await openCreateReportPage(
+        recreateBtn.dataset.folder,
+        recreateBtn.dataset.id
+      );
+    }
     return;
   }
 
-  // Ambil data dari main melalui IPC
-  const rows = await window.electronAPI.getReports();
-  // allReports = rows; // simpan ke global
-  // renderReportsRows(rows);
+  const openBtn = e.target.closest(".btn-open");
+  if (openBtn) {
+    const folder = openBtn.dataset.folder;
 
-  everyReports = rows;
-  currentPage = 1; // reset page setiap load
-  renderReportsRows(everyReports);
-
-  console.log("📌 Data reports:", rows);
-
-  // Add event ke tombol ⋮
-  document.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".btn-open");
-    if (!btn) return;
-
-    const folder = btn.dataset.folder;
-    console.log("➡ Folder:", folder);
-
-    // Load halaman detail dulu
     const html = window.electronAPI.loadHTML("views/reports-detail.html");
     document.querySelector("#reports-content").innerHTML = html;
 
-    // Setelah halaman masuk, minta daftar file ke main.js
     const files = await window.electronAPI.getFolderFiles(folder);
-
-    // Kirim ke renderer untuk ditampilkan
     renderFolderFiles(files);
-  });
+    return;
+  }
 
-  document.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".pdf-create");
-    if (!btn) return;
+  const pdfBtn = e.target.closest(".pdf-create");
+  if (pdfBtn) {
+    await openCreateReportPage(
+      pdfBtn.dataset.folder,
+      pdfBtn.dataset.id
+    );
+    return;
+  }
 
-    const folder = btn.dataset.folder;
-    console.log("📝 Create report untuk folder:", folder);
+  const editBtn = e.target.closest(".btn-edit");
+  if (editBtn) {
+    openEditPage(editBtn.dataset.folder, editBtn.dataset.id);
+    return;
+  }
 
-    // await openCreateReportPage(folder);
-    const id = btn.dataset.id;
-    console.log("   PROCEDURE ID:", id);
-    await openCreateReportPage(folder, id);
-  });
+  const deleteBtn = e.target.closest(".btn-delete");
+  if (deleteBtn) {
+    openDeletePage(deleteBtn.dataset.folder, deleteBtn.dataset.id);
+    return;
+  }
 
-  document.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".btn-edit");
-    if (!btn) return;
+});
 
-    const folder = btn.dataset.folder;
-    const id = btn.dataset.id;
-    console.log("✏ Edit report:", folder);
-    console.log("   ID Pasien:", id);
+async function renderReportsTable() {
+  await checkStorage();
 
-    openEditPage(folder, id);
-  });
+  const tableBody = document.querySelector("#reports-table tbody");
+  if (!tableBody) return;
 
-  document.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".btn-delete");
-    if (!btn) return;
-
-    const folder = btn.dataset.folder;
-    const id = btn.dataset.id;
-
-    // console.log("🗑 Delete report:", folder, id);
-
-    openDeletePage(folder, id);
-  });
-
-  console.log("🟢 Reports table selesai dirender");
+  everyReports = await window.electronAPI.getReports();
+  currentPage = 1;
+  renderReportsRows(everyReports);
 }
 
 document.addEventListener("click", (e) => {
@@ -451,35 +442,73 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// async function applyKopSettings() {
+//   const settings = await window.electronAPI.getSettings(); // ambil file JSON
+
+//   if (!settings) {
+//     console.warn("⚠️ Settings kosong / belum diset");
+//     return;
+//   }
+
+//   // Ambil elemen DOM setelah HTML load
+//   const logoEl = document.querySelector("#logo");
+//   const instansiEl = document.querySelector(".instansi");
+//   const detailEl = document.querySelector(".kop-detail");
+
+//   // Logo
+//   if (settings.logoPath && logoEl) {
+//     logoEl.src = settings.logoPath;
+//   }
+
+//   // Nama RS
+//   if (settings.rs && instansiEl) {
+//     instansiEl.textContent = settings.rs;
+//   }
+
+//   // Detail RS (multi-line)
+//   // if (settings.detailRs && detailEl) {
+//   //   detailEl.innerHTML = settings.detailRs.replace(/\n/g, "<br>");
+//   // }
+//   if (settings.detailRs && detailEl) {
+//     detailEl.textContent = settings.detailRs;
+//   }
+//   console.log("🏥 Kop surat diaplikasikan:", settings);
+// }
+
 async function applyKopSettings() {
-  const settings = await window.electronAPI.getSettings(); // ambil file JSON
+  const settings = await window.electronAPI.getSettings();
+  console.log("🔍 Data yang diterima Report:", settings);
 
-  if (!settings) {
-    console.warn("⚠️ Settings kosong / belum diset");
-    return;
-  }
+  if (!settings) return;
 
-  // Ambil elemen DOM setelah HTML load
   const logoEl = document.querySelector("#logo");
   const instansiEl = document.querySelector(".instansi");
   const detailEl = document.querySelector(".kop-detail");
 
-  // Logo
-  if (settings.logoPath && logoEl) {
-    logoEl.src = settings.logoPath;
-  }
+  if (settings.logoPath && logoEl) logoEl.src = settings.logoPath;
+  if (settings.rs && instansiEl) instansiEl.textContent = settings.rs;
 
-  // Nama RS
-  if (settings.rs && instansiEl) {
-    instansiEl.textContent = settings.rs;
-  }
+  if (detailEl) {
+    const dept = settings.departmentsRs || "";
+    const addr = settings.detailRs || "";
 
-  // Detail RS (multi-line)
-  if (settings.detailRs && detailEl) {
-    detailEl.innerHTML = settings.detailRs.replace(/\n/g, "<br>");
-  }
+    // Split berdasarkan newline dan bersihkan baris kosong
+    const deptLines = dept.split('\n').filter(l => l.trim() !== "");
 
-  console.log("🏥 Kop surat diaplikasikan:", settings);
+    let htmlContent = "";
+
+    // LOOPING: Semua baris di Departemen (b dan c) diberi class dept-row
+    deptLines.forEach(line => {
+      htmlContent += `<div class="dept-row">${line.trim()}</div>`;
+    });
+
+    // Baris alamat (d) diberi class addr-row
+    if (addr) {
+      htmlContent += `<div class="addr-row">${addr.trim()}</div>`;
+    }
+
+    detailEl.innerHTML = htmlContent;
+  }
 }
 
 async function openCreateReportPage(folderPath, procedureId) {
@@ -520,9 +549,73 @@ async function openCreateReportPage(folderPath, procedureId) {
   renderReportPhotos(files);
 }
 
+// function renderReportPhotos(files) {
+//   const list = document.getElementById("patient-photo-list");
+//   if (!list) return;
+
+//   list.innerHTML = "";
+
+//   const images = files
+//     .filter(f => /\.(jpg|jpeg|png)$/i.test(f.ext))
+//     .map(f => f.path.replace(/\\/g, "/"));
+
+//   if (images.length === 0) {
+//     list.innerHTML = "<p class='text-muted'>Tidak ada foto</p>";
+//     return;
+//   }
+
+//   images.forEach(src => {
+//     const img = document.createElement("img");
+//     img.src = `file:///${src}`;
+//     img.className = "thumb-item";
+
+//     // 👇 Klik gambar kiri → masuk ke right-report
+//     img.addEventListener("click", () => {
+//       const photoArea = document.getElementById("photo-area");
+//       if (photoArea.children.length >= 10) return;
+
+//       // Pindah ke kanan
+//       const bigImg = document.createElement("img");
+//       bigImg.src = img.src;
+//       bigImg.className = "thumb-item-big";
+//       bigImg.style.width = "100%";
+//       bigImg.style.marginBottom = "10px";
+//       bigImg.style.objectFit = "contain";
+//       bigImg.style.borderRadius = "8px";
+
+//       // Klik foto di kanan -> kembali ke kiri
+//       bigImg.addEventListener("click", () => {
+//         // Hapus dari area kanan
+//         bigImg.remove();
+
+//         // Kembalikan ke list kiri
+//         const originalImg = document.createElement("img");
+//         originalImg.src = bigImg.src;
+//         originalImg.className = "thumb-item";
+
+//         // Pasang event pindah lagi
+//         originalImg.addEventListener("click", () => {
+//           originalImg.remove();
+//           photoArea.appendChild(bigImg);
+//         });
+
+//         list.appendChild(originalImg);
+//       });
+
+//       // Hapus dari kiri saat pindah
+//       img.remove();
+
+//       photoArea.appendChild(bigImg);
+//     });
+
+//     list.appendChild(img);
+//   });
+// }
+
 function renderReportPhotos(files) {
   const list = document.getElementById("patient-photo-list");
-  if (!list) return;
+  const photoArea = document.getElementById("photo-area");
+  if (!list || !photoArea) return;
 
   list.innerHTML = "";
 
@@ -530,22 +623,31 @@ function renderReportPhotos(files) {
     .filter(f => /\.(jpg|jpeg|png)$/i.test(f.ext))
     .map(f => f.path.replace(/\\/g, "/"));
 
-  if (images.length === 0) {
-    list.innerHTML = "<p class='text-muted'>Tidak ada foto</p>";
-    return;
-  }
-
   images.forEach(src => {
+    const fullSrc = `file:///${src}`;
+
+    // Cek duplikat agar tidak muncul di kiri jika sudah ada di kanan
+    const isAlreadyOnPaper = Array.from(photoArea.querySelectorAll("img"))
+      .some(img => img.src === fullSrc);
+    if (isAlreadyOnPaper) return;
+
     const img = document.createElement("img");
-    img.src = `file:///${src}`;
+    img.src = fullSrc;
     img.className = "thumb-item";
 
-    // 👇 Klik gambar kiri → masuk ke right-report
-    img.addEventListener("click", () => {
-      const photoArea = document.getElementById("photo-area");
-      if (photoArea.children.length >= 10) return;
+    img.addEventListener("click", async () => {
+      if (photoArea.children.length >= 10) {
+        // Ganti alert dengan Swal
+        Swal.fire({
+          icon: 'error',
+          title: 'Batas Maksimal',
+          text: 'Maksimal hanya 10 foto yang dapat dimasukkan ke laporan.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        return;
+      }
 
-      // Pindah ke kanan
       const bigImg = document.createElement("img");
       bigImg.src = img.src;
       bigImg.className = "thumb-item-big";
@@ -554,29 +656,13 @@ function renderReportPhotos(files) {
       bigImg.style.objectFit = "contain";
       bigImg.style.borderRadius = "8px";
 
-      // Klik foto di kanan -> kembali ke kiri
       bigImg.addEventListener("click", () => {
-        // Hapus dari area kanan
         bigImg.remove();
-
-        // Kembalikan ke list kiri
-        const originalImg = document.createElement("img");
-        originalImg.src = bigImg.src;
-        originalImg.className = "thumb-item";
-
-        // Pasang event pindah lagi
-        originalImg.addEventListener("click", () => {
-          originalImg.remove();
-          photoArea.appendChild(bigImg);
-        });
-
-        list.appendChild(originalImg);
+        renderReportPhotos(files); // Re-render daftar kiri
       });
 
-      // Hapus dari kiri saat pindah
-      img.remove();
-
       photoArea.appendChild(bigImg);
+      img.remove();
     });
 
     list.appendChild(img);
@@ -613,9 +699,19 @@ async function fillPatientInfoFromDatabase(folderPath, procedureId) {
     }
   };
 
+  const formatDateLocal = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  };
+
   set("patient-mrn", p.mrn);
   set("patient-name", p.name);
-  set("patient-dob", p.date_of_birth);
+  // set("patient-dob", p.date_of_birth);
+  set("patient-dob", formatDateLocal(p.date_of_birth));
   set("patient-age", p.age);
   set("patient-sex", p.sex);
   set("patient-procedure", p.procedure);
@@ -697,35 +793,104 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// function openLightbox(files, startIndex = 0) {
+//   currentLightboxFiles = files;
+//   currentLightboxIndex = startIndex;
+
+//   const overlay = document.createElement("div");
+//   overlay.id = "lightbox-overlay";
+//   overlay.style.position = "fixed";
+//   overlay.style.top = 0;
+//   overlay.style.left = 0;
+//   overlay.style.width = "100vw";
+//   overlay.style.height = "100vh";
+//   overlay.style.backgroundColor = "rgba(0,0,0,0.9)";
+//   overlay.style.display = "flex";
+//   overlay.style.alignItems = "center";
+//   overlay.style.justifyContent = "center";
+//   overlay.style.zIndex = 9999;
+
+//   const img = document.createElement("img");
+//   img.id = "lightbox-img";
+//   img.style.maxWidth = "90%";
+//   img.style.maxHeight = "90%";
+//   img.style.borderRadius = "6px";
+//   overlay.appendChild(img);
+
+//   img.src = `file:///${files[startIndex].path.replace(/\\/g, "/")}`;
+
+//   overlay.addEventListener("click", (e) => {
+//     if (e.target === overlay) overlay.remove();
+//     window.removeEventListener("keydown", handleLightboxKey);
+//   });
+
+//   document.body.appendChild(overlay);
+
+//   function handleLightboxKey(e) {
+//     if (e.key === "ArrowRight") {
+//       currentLightboxIndex = (currentLightboxIndex + 1) % currentLightboxFiles.length;
+//       img.src = `file:///${currentLightboxFiles[currentLightboxIndex].path.replace(/\\/g, "/")}`;
+//     } else if (e.key === "ArrowLeft") {
+//       currentLightboxIndex =
+//         (currentLightboxIndex - 1 + currentLightboxFiles.length) % currentLightboxFiles.length;
+//       img.src = `file:///${currentLightboxFiles[currentLightboxIndex].path.replace(/\\/g, "/")}`;
+//     } else if (e.key === "Escape") {
+//       overlay.remove();
+//       window.removeEventListener("keydown", handleLightboxKey);
+//     }
+//   }
+
+//   window.addEventListener("keydown", handleLightboxKey);
+// }
+
 function openLightbox(files, startIndex = 0) {
   currentLightboxFiles = files;
   currentLightboxIndex = startIndex;
 
   const overlay = document.createElement("div");
   overlay.id = "lightbox-overlay";
-  overlay.style.position = "fixed";
-  overlay.style.top = 0;
-  overlay.style.left = 0;
-  overlay.style.width = "100vw";
-  overlay.style.height = "100vh";
-  overlay.style.backgroundColor = "rgba(0,0,0,0.9)";
-  overlay.style.display = "flex";
-  overlay.style.alignItems = "center";
-  overlay.style.justifyContent = "center";
-  overlay.style.zIndex = 9999;
+  // Styling tetap sama
+  Object.assign(overlay.style, {
+    position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
+    backgroundColor: "rgba(0,0,0,0.9)", display: "flex", flexDirection: "column",
+    alignItems: "center", justifyContent: "center", zIndex: 9999
+  });
 
+  // Container untuk Gambar
   const img = document.createElement("img");
   img.id = "lightbox-img";
-  img.style.maxWidth = "90%";
-  img.style.maxHeight = "90%";
+  img.style.maxWidth = "85%";
+  img.style.maxHeight = "80%";
   img.style.borderRadius = "6px";
   overlay.appendChild(img);
 
-  img.src = `file:///${files[startIndex].path.replace(/\\/g, "/")}`;
+  // --- TAMBAHAN: TOMBOL DOWNLOAD ---
+  const btnDownload = document.createElement("a");
+  btnDownload.innerHTML = '<i class="bi bi-download"></i> Download';
+  // Gunakan class Bootstrap untuk styling cepat
+  btnDownload.className = "btn btn-light mt-3";
+  overlay.appendChild(btnDownload);
 
+  // Fungsi untuk update konten (Foto & Link Download)
+  function updateContent() {
+    const filePath = currentLightboxFiles[currentLightboxIndex].path;
+    const formattedPath = `file:///${filePath.replace(/\\/g, "/")}`;
+
+    img.src = formattedPath;
+    btnDownload.href = formattedPath;
+    // Mengambil nama file asli untuk nama file download
+    btnDownload.download = filePath.split(/[\\/]/).pop();
+  }
+
+  // Jalankan update pertama kali
+  updateContent();
+
+  // Event untuk menutup overlay
   overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) overlay.remove();
-    window.removeEventListener("keydown", handleLightboxKey);
+    if (e.target === overlay) {
+      overlay.remove();
+      window.removeEventListener("keydown", handleLightboxKey);
+    }
   });
 
   document.body.appendChild(overlay);
@@ -733,11 +898,10 @@ function openLightbox(files, startIndex = 0) {
   function handleLightboxKey(e) {
     if (e.key === "ArrowRight") {
       currentLightboxIndex = (currentLightboxIndex + 1) % currentLightboxFiles.length;
-      img.src = `file:///${currentLightboxFiles[currentLightboxIndex].path.replace(/\\/g, "/")}`;
+      updateContent();
     } else if (e.key === "ArrowLeft") {
-      currentLightboxIndex =
-        (currentLightboxIndex - 1 + currentLightboxFiles.length) % currentLightboxFiles.length;
-      img.src = `file:///${currentLightboxFiles[currentLightboxIndex].path.replace(/\\/g, "/")}`;
+      currentLightboxIndex = (currentLightboxIndex - 1 + currentLightboxFiles.length) % currentLightboxFiles.length;
+      updateContent();
     } else if (e.key === "Escape") {
       overlay.remove();
       window.removeEventListener("keydown", handleLightboxKey);
@@ -1166,19 +1330,19 @@ App.UI = {
           console.log("DEBUG selectedProcedure:", selectedProcedure);
 
           const confirmResult = await Swal.fire({
-            title: "Konfirmasi Pasien",
+            title: "Patient Confirmation",
             html: `
               <div class="text-start">
-                <p><strong>Nama:</strong> ${selectedPatient.name}</p>
-                <p><strong>No RM:</strong> ${selectedPatient.mrn}</p>
-                <p><strong>Prosedur:</strong> ${selectedProcedure.procedure}</p>
+                <p><strong>Name:</strong> ${selectedPatient.name}</p>
+                <p><strong>MR:</strong> ${selectedPatient.mrn}</p>
+                <p><strong>Procedure:</strong> ${selectedProcedure.procedure}</p>
               </div>
-              <p>Apakah data pasien sudah benar?</p>
+              <p>Is the patient data correct?</p>
             `,
             icon: "question",
             showCancelButton: true,
-            confirmButtonText: "✅ Sudah Benar",
-            cancelButtonText: "🔙 Salah / Kembali",
+            confirmButtonText: "✅ Yes",
+            cancelButtonText: "🔙 No",
           });
 
           if (confirmResult.isConfirmed) {
@@ -1296,7 +1460,7 @@ App.UI = {
               await captureImage(videoElement, selectedPatient);
               Swal.fire({
                 icon: "success",
-                title: "Foto disimpan",
+                title: "Photo Saved",
                 timer: 1200,
                 showConfirmButton: false,
               });
@@ -1330,12 +1494,12 @@ App.UI = {
         if (btnFinish) {
           btnFinish.addEventListener("click", async () => {
             const result = await Swal.fire({
-              title: "Selesai Prosedur?",
-              text: "Pastikan semua foto dan video sudah diambil.",
+              title: "Finish Procedure?",
+              text: "Make sure all photos and videos have been taken.",
               icon: "question",
               showCancelButton: true,
-              confirmButtonText: "✅ Ya, Selesai",
-              cancelButtonText: "❌ Batal",
+              confirmButtonText: "✅ Yes, Finish",
+              cancelButtonText: "❌ No",
               reverseButtons: true,
             });
 
@@ -1415,8 +1579,8 @@ App.UI = {
               // ✅ Notifikasi sukses
               Swal.fire({
                 icon: "success",
-                title: "Prosedur selesai!",
-                text: "Silakan isi laporan di tab Reports.",
+                title: "Procedure Completed!",
+                text: "Please fill out the report in the Reports tab.",
                 timer: 1500,
                 showConfirmButton: false
               });
@@ -1472,10 +1636,42 @@ App.UI = {
             renderReportsTable();
           }, 0);
 
+          // document.querySelector("#search-reports").addEventListener("input", async (e) => {
+          //   const q = e.target.value.trim();
+
+          //   // Jika kolom search kosong → tampilkan semua kembali
+          //   if (q === "") {
+          //     const all = await window.electronAPI.getReports();
+          //     allReports = all;
+          //     renderReportsRows(allReports);
+          //     return;
+          //   }
+
+          //   // 1️⃣ hasil search JOIN patients + procedures
+          //   const searchResults = await window.electronAPI.searchPatients(q);
+
+          //   // 2️⃣ mapping ke format renderReportsRows()
+          //   const mapped = searchResults.map(r => ({
+          //     id: r.procedure_id,
+          //     patient_id: r.patient_id,
+          //     mrnName: `${r.mrn}-${r.name}`,
+          //     procedure: r.procedure,
+          //     // date: r.date_procedure,
+          //     date: formatDate(r.date_procedure),
+          //     time: r.procedure_time,
+          //     folderPath: `${r.mrn}-${r.name}/${r.procedure_id}`,
+          //     hasPdf: false
+          //   }));
+
+          //   // 3️⃣ tampilkan
+          //   renderReportsRows(mapped);
+
+          //   console.log("🔍 Hasil pencarian mapped:", mapped);
+          // });
+
           document.querySelector("#search-reports").addEventListener("input", async (e) => {
             const q = e.target.value.trim();
 
-            // Jika kolom search kosong → tampilkan semua kembali
             if (q === "") {
               const all = await window.electronAPI.getReports();
               allReports = all;
@@ -1483,25 +1679,28 @@ App.UI = {
               return;
             }
 
-            // 1️⃣ hasil search JOIN patients + procedures
+            // 1️⃣ Ambil data mentah dari pencarian DB
             const searchResults = await window.electronAPI.searchPatients(q);
 
-            // 2️⃣ mapping ke format renderReportsRows()
-            const mapped = searchResults.map(r => ({
-              id: r.procedure_id,
-              patient_id: r.patient_id,
-              mrnName: `${r.mrn} - ${r.name}`,
-              procedure: r.procedure,
-              date: r.date_procedure,
-              time: r.procedure_time,
-              folderPath: `${r.mrn}-${r.name}/${r.procedure_id}`,
-              hasPdf: false
+            // 2️⃣ Mapping dan cek status PDF untuk setiap hasil
+            const mapped = await Promise.all(searchResults.map(async (r) => {
+              // Panggil fungsi yang baru kita buat di main.js
+              const status = await window.electronAPI.checkPdfStatus(r);
+
+              return {
+                id: r.procedure_id,
+                patient_id: r.patient_id,
+                mrnName: `${r.mrn}-${r.name}`,
+                procedure: r.procedure,
+                date: formatDate(r.date_procedure), // Menggunakan dd-mm-yyyy yang kita buat tadi
+                time: r.procedure_time || "-",
+                folderPath: status.folderKey,       // Diambil dari hasil cek folder di main
+                hasPdf: status.hasPdf               // Sekarang dinamis (true/false)
+              };
             }));
 
-            // 3️⃣ tampilkan
+            // 3️⃣ Tampilkan ke tabel
             renderReportsRows(mapped);
-
-            console.log("🔍 Hasil pencarian mapped:", mapped);
           });
 
         } catch (err) {
@@ -1584,8 +1783,8 @@ App.UI = {
         $("button.nav-link").removeClass("active");
         $("#settings-tab").addClass("active");
 
-  $(".tab-pane").removeClass("show active");
-  $("#settings").addClass("show active");
+        $(".tab-pane").removeClass("show active");
+        $("#settings").addClass("show active");
       }
     });
 
@@ -1780,6 +1979,137 @@ App.UI = {
         selectedPatient = null;
       });
 
+      // Auto-suggest for Doctor Name
+      const doctorInput = document.getElementById("doctor_name");
+      const suggestionBox = document.getElementById("doctorSuggestions");
+
+      let doctorTimer;
+
+      doctorInput.addEventListener("input", () => {
+        clearTimeout(doctorTimer);
+
+        const q = doctorInput.value.trim();
+        if (!q) {
+          suggestionBox.classList.add("d-none");
+          return;
+        }
+
+        doctorTimer = setTimeout(async () => {
+          const doctors = await window.electronAPI.suggestDoctors(q);
+
+          suggestionBox.innerHTML = "";
+          if (!doctors.length) {
+            suggestionBox.classList.add("d-none");
+            return;
+          }
+
+          // doctors.forEach(d => {
+          //   const li = document.createElement("li");
+          //   li.className = "list-group-item list-group-item-action";
+          //   li.textContent = d.name;
+          //   li.onclick = () => {
+          //     doctorInput.value = d.name;
+          //     suggestionBox.classList.add("d-none");
+          //   };
+          //   suggestionBox.appendChild(li);
+          // });
+
+          doctors.forEach(d => {
+            const li = document.createElement("li");
+            li.className =
+              "list-group-item d-flex justify-content-between align-items-center";
+            li.style.cursor = "pointer";
+
+            const nameSpan = document.createElement("span");
+            nameSpan.textContent = d.name;
+
+            const deleteSpan = document.createElement("span");
+            deleteSpan.textContent = "❌";
+            deleteSpan.style.cursor = "pointer";
+            deleteSpan.style.fontSize = "14px";
+            deleteSpan.style.color = "red";
+
+            deleteSpan.onclick = async (e) => {
+              e.stopPropagation(); // ⛔ jangan trigger pilih dokter
+              await window.electronAPI.deleteDoctor(d.doctor_id);
+              li.remove();
+            };
+
+            li.onclick = () => {
+              doctorInput.value = d.name;
+              suggestionBox.classList.add("d-none");
+            };
+
+            li.appendChild(nameSpan);
+            li.appendChild(deleteSpan);
+            suggestionBox.appendChild(li);
+          });
+
+          suggestionBox.classList.remove("d-none");
+        }, 250);
+      });
+
+      // Auto-suggest for Procedure (Master Examinations)
+      const procedureInput = document.getElementById("procedure");
+      const procedureSuggestionBox = document.getElementById("procedureSuggestions");
+
+      let procedureTimer;
+
+      procedureInput.addEventListener("input", () => {
+        clearTimeout(procedureTimer);
+        const q = procedureInput.value.trim();
+
+        if (!q) {
+          procedureSuggestionBox.classList.add("d-none");
+          return;
+        }
+
+        procedureTimer = setTimeout(async () => {
+          // Gunakan API baru (kita buat di main.js nanti)
+          const suggestions = await window.electronAPI.suggestExaminations(q);
+
+          procedureSuggestionBox.innerHTML = "";
+          if (!suggestions.length) {
+            procedureSuggestionBox.classList.add("d-none");
+            return;
+          }
+
+          suggestions.forEach(item => {
+            const li = document.createElement("li");
+            li.className = "list-group-item d-flex justify-content-between align-items-center";
+            li.style.cursor = "pointer";
+
+            li.innerHTML = `
+            <span>${item.name}</span>
+            <span class="text-danger delete-exam" data-id="${item.examination_id}" style="cursor:pointer">❌</span>
+          `;
+
+            // Klik untuk pilih
+            li.onclick = () => {
+              procedureInput.value = item.name;
+              procedureSuggestionBox.classList.add("d-none");
+            };
+
+            // Klik untuk hapus dari master (opsional)
+            const delBtn = li.querySelector(".delete-exam");
+            delBtn.onclick = async (e) => {
+              e.stopPropagation();
+              await window.electronAPI.deleteExamination(item.examination_id);
+              li.remove();
+            };
+
+            procedureSuggestionBox.appendChild(li);
+          });
+
+          procedureSuggestionBox.classList.remove("d-none");
+        }, 250);
+      });
+
+      // Sembunyikan box jika klik di luar
+      document.addEventListener("click", (e) => {
+        if (e.target !== procedureInput) procedureSuggestionBox.classList.add("d-none");
+      });
+
       // =====================================================
       //  🔍 AUTO-CHECK MRN SAAT USER MENGETIK
       // =====================================================
@@ -1892,6 +2222,15 @@ App.UI = {
         };
 
         try {
+          // Cek dulu apakah dokter sudah ada
+          const doctorName = document.getElementById("doctor_name").value.trim();
+          const examination = document.getElementById("procedure").value.trim();
+
+          if (doctorName) {
+            await window.electronAPI.insertDoctorIfNotExists(doctorName);
+            await window.electronAPI.insertExaminationIfNotExists(examination);
+          }
+
           // Cek dulu apakah MRN sudah ada
           const existingPatient = await window.electronAPI.getPatientByMRN(patientData.mrn);
 
@@ -1951,12 +2290,12 @@ App.UI = {
       e.returnValue = "";
 
       Swal.fire({
-        title: "Tindakan sedang berlangsung",
-        text: "Apakah Anda yakin ingin menutup aplikasi? Tindakan akan dianggap selesai.",
+        title: "Procedure in Progress",
+        text: "Are you sure you want to leave?",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Ya, tutup",
-        cancelButtonText: "Batal",
+        confirmButtonText: "Yes, close it",
+        cancelButtonText: "No",
       }).then((result) => {
         if (result.isConfirmed) {
           // console.log("✅ Dokter konfirmasi selesai, menutup window...");

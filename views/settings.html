@@ -1,25 +1,113 @@
 <div class="p-3">
-	<h4>Settings</h4>
-	<p class="text-muted">Configure your header report.</p>
+  <h4>Settings</h4>
+  <p class="text-muted">Configure your header report.</p>
 
-	<!-- LOGO IMAGE INPUT -->
-	<div class="mb-3">
-		<label class="form-label">Hospital Logo</label>
-		<input type="file" id="logo-upload" class="form-control" accept="image/*">
-		<small class="text-muted">Upload logo for the report header.</small>
-	</div>
+  <!-- LOGO IMAGE INPUT -->
+  <div class="mb-3">
+    <label class="form-label">Hospital Logo</label>
+    <input type="file" id="logo-upload" class="form-control" accept="image/*" />
+    <small class="text-muted">Upload logo for the report header.</small>
+  </div>
 
-	<!-- HOSPITAL NAME -->
-	<div class="mb-3">
-		<label class="form-label">Hospital Name</label>
-		<input id="rs" class="form-control" placeholder="Enter hospital name">
-	</div>
+  <!-- HOSPITAL NAME -->
+  <div class="mb-3">
+    <label class="form-label">Hospital Name</label>
+    <input
+      id="rs"
+      class="form-control"
+      placeholder="Enter hospital name"
+      required
+    />
+  </div>
 
-	<!-- HOSPITAL DETAILS -->
-	<div class="mb-3">
-		<label class="form-label">Hospital Details</label>
-		<textarea id="detail-rs" class="form-control" rows="3" placeholder="Address, phone number, etc."></textarea>
-	</div>
+  <!-- HOSPITAL DEPARTMENTS -->
+  <div class="mb-3">
+    <label class="form-label">Hospital Departments</label>
+    <textarea
+      id="departments-rs"
+      class="form-control"
+      rows="2"
+      placeholder="Departments Name"
+      required
+    ></textarea>
+  </div>
 
-	<button id="save-settings" class="btn btn-primary">Save Settings</button>
+  <!-- HOSPITAL DETAILS -->
+  <div class="mb-3">
+    <label class="form-label">Hospital Details</label>
+    <textarea
+      id="detail-rs"
+      class="form-control"
+      rows="1"
+      placeholder="Address, phone number, etc."
+      required
+    ></textarea>
+  </div>
+
+  <button id="save-settings" class="btn btn-primary">Save Settings</button>
 </div>
+
+<script>
+  (function () {
+    const rsInput = document.getElementById("rs");
+    const deptInput = document.getElementById("departments-rs");
+    const detailInput = document.getElementById("detail-rs");
+    const logoUpload = document.getElementById("logo-upload");
+    const saveBtn = document.getElementById("save-settings");
+
+    // --- VALIDASI INPUT (Sama seperti sebelumnya) ---
+    deptInput.onkeydown = function (e) {
+      if (e.key === "Enter") {
+        const lines = this.value.split("\n");
+        if (lines.length >= 2) e.preventDefault();
+      }
+    };
+
+    detailInput.onkeydown = function (e) {
+      if (e.key === "Enter") e.preventDefault();
+    };
+
+    // --- LOGIKA SIMPAN DI settings.html ---
+    saveBtn.addEventListener("click", async () => {
+      // Ambil semua value tepat saat tombol diklik
+      const rsValue = document.getElementById("rs").value;
+      const deptValue = document.getElementById("departments-rs").value;
+      const detailValue = document.getElementById("detail-rs").value;
+      const logoFiles = document.getElementById("logo-upload").files;
+
+      // Ambil data lama dulu untuk backup logoPath
+      const currentSettings = await window.electronAPI.getSettings();
+      let finalLogoPath = currentSettings ? currentSettings.logoPath : null;
+
+      // Jika user memilih file baru, gunakan path file baru
+      if (logoFiles.length > 0) {
+        finalLogoPath = logoFiles[0].path;
+      }
+
+      const newSettings = {
+        rs: rsValue,
+        departmentsRs: deptValue, // Pastikan ini terambil
+        detailRs: detailValue,
+        logoPath: finalLogoPath,
+      };
+
+      console.log("Mengirim data ke Main:", newSettings); // Cek di DevTools Browser
+
+      try {
+        const success = await window.electronAPI.saveSettings(newSettings);
+      } catch (err) {
+        console.error("Error saving settings:", err);
+      }
+    });
+
+    // --- LOAD DATA AWAL (Agar saat buka settings, data lama muncul) ---
+    window.addEventListener("DOMContentLoaded", async () => {
+      const settings = await window.electronAPI.getSettings();
+      if (settings) {
+        rsInput.value = settings.rs || "";
+        deptInput.value = settings.departmentsRs || "";
+        detailInput.value = settings.detailRs || "";
+      }
+    });
+  })();
+</script>

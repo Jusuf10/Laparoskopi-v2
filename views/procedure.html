@@ -6,13 +6,13 @@
         <!-- Header pasien -->
         <div class="patient-header mb-3 d-flex justify-content-between align-items-center">
           <div>
-            🩺 <strong>Pasien:</strong>
+            🩺 <strong>Patient:</strong>
             <span id="active-patient-name">-</span>
-            (<span id="active-patient-mrn">No RM: -</span>) -
+            (<span id="active-patient-mrn">MR: -</span>) -
             <span id="active-procedure">-</span>
           </div>
           <button id="btn-start-procedure" class="btn btn-success btn-sm">
-            ▶️ Mulai Tindakan
+            ▶️ Start Procedure
           </button>
         </div>
 
@@ -25,7 +25,7 @@
             <div class="fw-bold">🎥 VIDEO CAMERA</div>
             <div style="width: 200px">
               <select id="camera-select" class="form-select form-select-sm">
-                <option value="">Pilih Kamera...</option>
+                <option value="">Choose Camera...</option>
               </select>
             </div>
           </div>
@@ -43,7 +43,7 @@
           <!-- Control buttons -->
           <div class="control-bar mb-3 mt-1">
             <div class="d-flex gap-2">
-              <button class="btn btn-danger" id="btn-record">⏺️ Record</button>
+              <button class="btn btn-danger" id="btn-record" hidden>⏺️ Record</button>
               <button class="btn btn-primary" id="btn-capture">📸 Capture</button>
               <button class="btn btn-warning" id="btn-finish">✅ Finish Procedure</button>
             </div>
@@ -56,7 +56,7 @@
     <div class="col-md-4 col-lg-3">
       <div class="right-scroll">
         <div class="sidebar-photos">
-          <h6 class="text-center mb-3">📷 Hasil Capture / Record</h6>
+          <h6 class="text-center mb-3">📷 Capture Results</h6>
           <div id="gallery-container" class="d-flex flex-column gap-2"></div>
         </div>
       </div>

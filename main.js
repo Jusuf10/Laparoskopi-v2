@@ -3,17 +3,52 @@ const { exec } = require("child_process");
 const path = require('path');
 const fs = require("fs");
 const db = require('./database');
+const isDev = !app.isPackaged;
 
-const basePatientsFolder = path.join(__dirname, "patients");
+const USER_DATA = app.getPath("userData");
+
+let mainWindow;
+let splash;
+
+const PATHS = {
+  patients: path.join(USER_DATA, "patients"),
+  icons: path.join(USER_DATA, "icons"),
+  settings: path.join(USER_DATA, "file.json"),
+};
+
+// const basePatientsFolder = path.join(__dirname, "patients");
+const basePatientsFolder = PATHS.patients;
+
 const patientsDir = basePatientsFolder;
 
+// pastikan folder ada
+Object.values(PATHS).forEach(p => {
+  if (!p.endsWith(".json")) {
+    fs.mkdirSync(p, { recursive: true });
+  }
+});
+
 function createWindow() {
+
+  splash = new BrowserWindow({
+    width: 600,
+    height: 400,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true, // Pastikan splash selalu paling depan
+    resizable: false,
+    center: true
+  });
+  splash.loadFile('splash.html');
+
   const win = new BrowserWindow({
     width: 1250,
     height: 700,
     minWidth: 1250,
+    show: false,
 
-    maximizable: false,
+    // maximizable: false,
+    maximizable: true,
     minimizable: true,
     resizable: false,
 
@@ -24,14 +59,34 @@ function createWindow() {
       enableRemoteModule: false,
       sandbox: false,
       webviewTag: false,
+
+      devTools: isDev
     },
   });
-
+  win.setMenu(null);
   win.loadFile('index.html');
 
-  win.maximize();
+  // win.maximize();
 
-  win.webContents.openDevTools(); // aktifkan DevTools di sini
+  // win.webContents.openDevTools(); // aktifkan DevTools di sini
+  mainWindow = win;
+
+  // 3. LOGIKA TRANSISI: Tunggu loading selesai
+  win.once('ready-to-show', () => {
+    // Jalankan timer 2 detik
+    setTimeout(() => {
+      if (splash) {
+        splash.close(); // Tutup splash dulu sampai hilang
+      }
+    }, 2000);
+  });
+
+  // 4. MUNCULKAN MAIN WINDOW HANYA SAAT SPLASH DITUTUP
+  splash.on('closed', () => {
+    mainWindow.maximize(); // Maximize sekarang
+    mainWindow.show();     // Baru tampilkan
+    mainWindow.focus();    // Pastikan di depan
+  });
 }
 
 function convertSQLDateToFolderDate(date) {
@@ -57,8 +112,8 @@ function deleteFolderIfEmpty(folderPath) {
 }
 
 ipcMain.handle("save-logo", async (event, file) => {
-  const iconsDir = path.join(__dirname, "icons");
-
+  // const iconsDir = path.join(__dirname, "icons");
+  const iconsDir = PATHS.icons;
   // Pastikan folder icons ada
   if (!fs.existsSync(iconsDir)) {
     fs.mkdirSync(iconsDir);
@@ -74,15 +129,24 @@ ipcMain.handle("save-logo", async (event, file) => {
 });
 
 ipcMain.handle("save-settings", async (event, data) => {
-  const jsonPath = path.join(__dirname, "file.json");
+  const jsonPath = PATHS.settings;
 
+  // 1. Baca data lama dulu (jika ada)
+  let currentSettings = {};
+  if (fs.existsSync(jsonPath)) {
+    currentSettings = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+  }
+
+  // 2. Timpa hanya data yang dikirim (Merge)
   const settings = {
-    rs: data.rs,
-    detailRs: data.detailRs,
-    logoPath: data.logoPath || null
+    rs: data.rs !== undefined ? data.rs : currentSettings.rs,
+    departmentsRs: data.departmentsRs !== undefined ? data.departmentsRs : currentSettings.departmentsRs,
+    detailRs: data.detailRs !== undefined ? data.detailRs : currentSettings.detailRs,
+    logoPath: data.logoPath !== undefined ? data.logoPath : currentSettings.logoPath
   };
 
   fs.writeFileSync(jsonPath, JSON.stringify(settings, null, 2));
+  console.log("✅ Settings berhasil di-update:", settings);
   return true;
 });
 
@@ -120,6 +184,21 @@ ipcMain.handle("get-disk-usage", async () => {
     });
   });
 });
+
+/**
+ * Delete logic explanation:
+ * - If ANY procedure is finished:
+ *   → Patient identity is considered VALID
+ *   → Only queued (pre-action) procedures may be deleted
+ *
+ * - If NO procedure is finished:
+ *   → Patient is considered WRONG INPUT
+ *   → All procedures + patient record are removed
+ *
+ * Context:
+ * - This logic applies ONLY during initial patient registration phase
+ * - Designed for procedural workstation (1–2 procedures max per patient/day)
+ */
 
 ipcMain.handle("delete-patient-or-procedures", (event, patientId) => {
   // Ambil semua procedures milik pasien ini
@@ -159,6 +238,37 @@ ipcMain.handle('get-patients', () => {
     FROM patients
     ORDER BY patient_id
   `).all();
+});
+
+// 🔍 AUTOCOMPLETE / SUGGEST DOCTOR
+ipcMain.handle("suggest-doctors", (_, keyword) => {
+  if (!keyword) return [];
+
+  return db.prepare(`
+    SELECT doctor_id, name
+    FROM doctors
+    WHERE name LIKE ?
+    ORDER BY name
+    LIMIT 10
+  `).all(`%${keyword}%`);
+});
+
+// ➕ INSERT dokter baru (dipanggil saat save procedure)
+ipcMain.handle("insert-doctor-if-not-exists", (_, name) => {
+  if (!name) return;
+
+  db.prepare(`
+    INSERT OR IGNORE INTO doctors (name)
+    VALUES (?)
+  `).run(name);
+});
+
+// ❌ HAPUS dokter typo
+ipcMain.handle("delete-doctor", (_, doctor_id) => {
+  db.prepare(`
+    DELETE FROM doctors
+    WHERE doctor_id = ?
+  `).run(doctor_id);
 });
 
 ipcMain.handle("search-patients", (event, query) => {
@@ -326,16 +436,7 @@ ipcMain.handle('delete-patient-by-id', (event, id) => {
   return true;
 });
 
-ipcMain.handle("delete", async (event, { procedure_id }) => {
-  if (!procedure_id) throw new Error("procedure_id kosong!");
 
-  await db.run(
-    `DELETE FROM procedures WHERE procedure_id = ?`,
-    [procedure_id]
-  );
-
-  return true;
-});
 
 ipcMain.handle("get-procedures-by-mrn", (event, mrn) => {
   return db.prepare(
@@ -363,32 +464,109 @@ ipcMain.handle("delete-procedure", async (event, procedureId) => {
   return true;
 });
 
+ipcMain.handle('suggest-examinations', (event, q) => {
+  return db.prepare("SELECT * FROM examinations WHERE name LIKE ? LIMIT 10").all(`%${q}%`);
+});
+
+ipcMain.handle('insert-examination', (event, name) => {
+  return db.prepare("INSERT OR IGNORE INTO examinations (name) VALUES (?)").run(name);
+});
+
+ipcMain.handle('delete-examination', (event, id) => {
+  return db.prepare("DELETE FROM examinations WHERE examination_id = ?").run(id);
+});
+
+// ipcMain.handle("ensure-patient-folder", async (event, {
+//   mrn,
+//   procedure,
+//   procedureDate,
+//   procedureTime,
+//   procedureId
+// }) => {
+
+//   console.log("📥 ensure-patient-folder PARAMETER:", {
+//     mrn, procedure, procedureDate, procedureTime, procedureId
+//   });
+
+//   if (!mrn) throw new Error("MRN kosong!");
+//   if (!procedure) throw new Error("Procedure kosong!");
+
+//   // const projectRoot = path.join(__dirname, "patients");
+//   const projectRoot = PATHS.patients;
+
+//   const datePart =
+//     procedureDate ||
+//     new Date().toLocaleDateString("id-ID").replace(/\//g, "-");
+
+//   const timePart =
+//     procedureTime ||
+//     new Date()
+//       .toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+//       .replace(":", ".");
+
+//   // === Folder Structure ===
+//   const patientDir = path.join(projectRoot, mrn.toString());
+//   const dateDir = path.join(patientDir, datePart);
+//   const procedureDir = path.join(dateDir, procedure);
+//   const timeDir = path.join(procedureDir, timePart);
+
+//   fs.mkdirSync(timeDir, { recursive: true });
+
+//   // === SAVE TIME TO DATABASE ===
+//   if (procedureId) {
+//     db.prepare(`
+//       UPDATE procedures 
+//       SET procedure_time = ? 
+//       WHERE procedure_id = ?
+//     `).run(timePart, procedureId);
+
+//     console.log("💾 Saved procedure_time:", timePart);
+//   } else {
+//     console.warn("⚠ procedureId tidak dikirim → waktu TIDAK disimpan!");
+//   }
+
+//   // 🔥 INI WAJIB: return sebagai object
+//   return { folderPath: timeDir };
+// });
+
 ipcMain.handle("ensure-patient-folder", async (event, {
   mrn,
   procedure,
-  procedureDate,
-  procedureTime,
   procedureId
 }) => {
 
-  console.log("📥 ensure-patient-folder PARAMETER:", {
-    mrn, procedure, procedureDate, procedureTime, procedureId
-  });
-
   if (!mrn) throw new Error("MRN kosong!");
   if (!procedure) throw new Error("Procedure kosong!");
+  if (!procedureId) throw new Error("procedureId wajib!");
 
-  const projectRoot = path.join(__dirname, "patients");
+  const projectRoot = PATHS.patients;
 
-  const datePart =
-    procedureDate ||
-    new Date().toLocaleDateString("id-ID").replace(/\//g, "-");
+  // === ambil dari DB (SOURCE OF TRUTH) ===
+  const row = db.prepare(`
+    SELECT procedure_time, date_procedure
+    FROM procedures
+    WHERE procedure_id = ?
+  `).get(procedureId);
 
-  const timePart =
-    procedureTime ||
-    new Date()
+  if (!row) throw new Error("Procedure tidak ditemukan!");
+
+  let datePartSQL = row.date_procedure;
+  let timePart = row.procedure_time;
+
+  const datePart = convertSQLDateToFolderDate(datePartSQL);
+
+  // === SET SEKALI SAJA ===
+  if (!timePart) {
+    timePart = new Date()
       .toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
       .replace(":", ".");
+
+    db.prepare(`
+      UPDATE procedures
+      SET procedure_time = ?
+      WHERE procedure_id = ?
+    `).run(timePart, procedureId);
+  }
 
   // === Folder Structure ===
   const patientDir = path.join(projectRoot, mrn.toString());
@@ -398,20 +576,6 @@ ipcMain.handle("ensure-patient-folder", async (event, {
 
   fs.mkdirSync(timeDir, { recursive: true });
 
-  // === SAVE TIME TO DATABASE ===
-  if (procedureId) {
-    db.prepare(`
-      UPDATE procedures 
-      SET procedure_time = ? 
-      WHERE procedure_id = ?
-    `).run(timePart, procedureId);
-
-    console.log("💾 Saved procedure_time:", timePart);
-  } else {
-    console.warn("⚠ procedureId tidak dikirim → waktu TIDAK disimpan!");
-  }
-
-  // 🔥 INI WAJIB: return sebagai object
   return { folderPath: timeDir };
 });
 
@@ -421,7 +585,8 @@ ipcMain.handle("save-file-to-folder", async (event, { folderPath, fileName, data
   if (path.isAbsolute(folderPath)) {
     actualFolder = folderPath;
   } else {
-    const basePatientsFolder = path.join(__dirname, "patients");
+    // const basePatientsFolder = path.join(__dirname, "patients");
+    const basePatientsFolder = PATHS.patients;
     actualFolder = path.join(basePatientsFolder, folderPath);
   }
 
@@ -463,8 +628,31 @@ ipcMain.handle("read-folder", async (event, folderPath) => {
   }
 });
 
+ipcMain.handle("check-pdf-status", async (event, r) => {
+  const rootPatients = PATHS.patients;
+  const mrn = r.mrn.toString();
+  const date = convertSQLDateToFolderDate(r.date_procedure);
+  const time = r.procedure_time;
+
+  let hasPdf = false;
+  let folderKey = "";
+
+  if (time) {
+    folderKey = `${mrn}/${date}/${r.procedure}/${time}`;
+    const absFolder = path.join(rootPatients, folderKey);
+
+    if (fs.existsSync(absFolder)) {
+      const files = fs.readdirSync(absFolder);
+      hasPdf = files.some(f => f.toLowerCase().endsWith(".pdf"));
+    }
+  }
+
+  return { hasPdf, folderKey };
+});
+
 ipcMain.handle("get-reports", () => {
-  const rootPatients = path.join(__dirname, "patients");
+  // const rootPatients = path.join(__dirname, "patients");
+  const rootPatients = PATHS.patients;
 
   const rows = db.prepare(`
     SELECT 
@@ -516,7 +704,8 @@ ipcMain.handle("get-reports", () => {
 });
 
 ipcMain.handle("get-folder-files", (event, relativePath) => {
-  const rootPatients = path.join(__dirname, "patients");
+  // const rootPatients = path.join(__dirname, "patients");
+  const rootPatients = PATHS.patients;
 
   const fullPath = path.join(rootPatients, relativePath);
   console.log("📁 Baca folder:", fullPath);
@@ -610,76 +799,9 @@ ipcMain.handle("delete-folder", async (event, fullPath) => {
   }
 });
 
-ipcMain.handle("delete-entire-patient", async (event, mrn) => {
-  await db.run(`DELETE FROM procedures WHERE mrn = ?`, [mrn]);
-  await db.run(`DELETE FROM patients WHERE mrn = ?`, [mrn]);
 
-  const folder = path.join(patientsDir, mrn);
-  if (fs.existsSync(folder)) fs.rmSync(folder, { recursive: true, force: true });
 
-  return true;
-});
 
-ipcMain.handle("delete-latest-procedure", async (event, procedureId) => {
-  // 1. Ambil data prosedur
-  const stmt = db.prepare(`
-    SELECT *
-    FROM procedures
-    WHERE procedure_id = ?
-  `);
-  const proc = stmt.get(procedureId);
-
-  if (!proc) {
-    throw new Error("Procedure tidak ditemukan");
-  }
-
-  // 2. Konversi tanggal ke format folder
-  const folderDate = convertSQLDateToFolderDate(proc.date_procedure);
-
-  // 3. Buat path spesifik ke prosedur yang akan dihapus
-  const deepestFolder = path.join(
-    baseDir,
-    proc.mrn.toString(),
-    folderDate,
-    proc.procedure,
-    proc.procedure_time
-  );
-
-  // 4. Hapus folder paling dalam
-  if (fs.existsSync(deepestFolder)) {
-    fs.rmSync(deepestFolder, { recursive: true, force: true });
-  }
-
-  // 5. Cleanup: jika folder-level sudah kosong → hapus
-  const procedureFolder = path.join(
-    baseDir,
-    proc.mrn.toString(),
-    folderDate,
-    proc.procedure
-  );
-  deleteFolderIfEmpty(procedureFolder);
-
-  const dateFolder = path.join(
-    baseDir,
-    proc.mrn.toString(),
-    folderDate
-  );
-  deleteFolderIfEmpty(dateFolder);
-
-  const mrnFolder = path.join(
-    baseDir,
-    proc.mrn.toString()
-  );
-  deleteFolderIfEmpty(mrnFolder);
-
-  // 6. Hapus di database
-  db.prepare(`
-    DELETE FROM procedures
-    WHERE procedure_id = ?
-  `).run(procedureId);
-
-  return { success: true };
-});
 
 // Delete the latest procedure for a given patient_id and remove its folder
 ipcMain.handle("delete-just-procedure", async (event, patient_id) => {
@@ -731,20 +853,8 @@ ipcMain.handle("delete-just-procedure", async (event, patient_id) => {
   }
 });
 
-// ipcMain.handle("get-settings", async () => {
-//   // const settingsPath = path.join(app.getPath("userData"), "settings.json");
-//   const settingsPath = path.join(__dirname, "file.json");
-
-//   try {
-//     const json = fs.readFileSync(settingsPath, "utf-8");
-//     return JSON.parse(json);
-//   } catch (err) {
-//     return null;
-//   }
-// });
-
 ipcMain.handle("get-settings", async () => {
-  const settingsPath = path.join(__dirname, "file.json");
+  const settingsPath = PATHS.settings;
 
   if (!fs.existsSync(settingsPath)) {
     return null;

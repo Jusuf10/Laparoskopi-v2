@@ -1,20 +1,46 @@
 {
   "name": "laparoscopy-v2",
   "version": "1.0.0",
-  "description": "",
+  "description": "Local Application for Endosscopy Result Reports (Captures & Exports)",
   "main": "main.js",
+  "build": {
+    "appId": "com.rs.laparoscopy",
+    "productName": "Endo App",
+    "asar":true,
+    "directories": {
+      "buildResources": "build"
+    },
+    "win":{
+      "target": "nsis",
+      "icon": "icons/icon.ico",
+      "forceCodeSigning": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true
+    }
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder --win"
   },
   "keywords": [],
-  "author": "",
+  "author": "Jusuf Julianto",
   "license": "ISC",
   "devDependencies": {
     "electron": "^38.3.0",
+    "electron-builder": "^26.0.12",
     "electron-rebuild": "^3.2.9"
   },
   "dependencies": {
-    "better-sqlite3": "^12.4.1"
+    "better-sqlite3": "^12.4.1",
+    "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
+    "html2canvas": "^1.4.1",
+    "jquery": "^3.7.1",
+    "jspdf": "^3.0.4",
+    "sweetalert2": "^11.26.17"
   }
 }
