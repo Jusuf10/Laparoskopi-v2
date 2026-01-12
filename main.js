@@ -7,9 +7,12 @@ const isDev = !app.isPackaged;
 
 const USER_DATA = app.getPath("userData");
 
+<<<<<<< HEAD
 let mainWindow;
 let splash;
 
+=======
+>>>>>>> e95d0c79ab3b3e0f8019bd52df8193ab85dfd2f8
 const PATHS = {
   patients: path.join(USER_DATA, "patients"),
   icons: path.join(USER_DATA, "icons"),
@@ -130,6 +133,7 @@ ipcMain.handle("save-logo", async (event, file) => {
 
 ipcMain.handle("save-settings", async (event, data) => {
   const jsonPath = PATHS.settings;
+<<<<<<< HEAD
 
   // 1. Baca data lama dulu (jika ada)
   let currentSettings = {};
@@ -137,6 +141,15 @@ ipcMain.handle("save-settings", async (event, data) => {
     currentSettings = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
   }
 
+=======
+  
+  // 1. Baca data lama dulu (jika ada)
+  let currentSettings = {};
+  if (fs.existsSync(jsonPath)) {
+    currentSettings = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+  }
+
+>>>>>>> e95d0c79ab3b3e0f8019bd52df8193ab85dfd2f8
   // 2. Timpa hanya data yang dikirim (Merge)
   const settings = {
     rs: data.rs !== undefined ? data.rs : currentSettings.rs,
@@ -476,6 +489,7 @@ ipcMain.handle('delete-examination', (event, id) => {
   return db.prepare("DELETE FROM examinations WHERE examination_id = ?").run(id);
 });
 
+<<<<<<< HEAD
 // ipcMain.handle("ensure-patient-folder", async (event, {
 //   mrn,
 //   procedure,
@@ -529,6 +543,8 @@ ipcMain.handle('delete-examination', (event, id) => {
 //   return { folderPath: timeDir };
 // });
 
+=======
+>>>>>>> e95d0c79ab3b3e0f8019bd52df8193ab85dfd2f8
 ipcMain.handle("ensure-patient-folder", async (event, {
   mrn,
   procedure,
@@ -633,7 +649,11 @@ ipcMain.handle("check-pdf-status", async (event, r) => {
   const mrn = r.mrn.toString();
   const date = convertSQLDateToFolderDate(r.date_procedure);
   const time = r.procedure_time;
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> e95d0c79ab3b3e0f8019bd52df8193ab85dfd2f8
   let hasPdf = false;
   let folderKey = "";
 
